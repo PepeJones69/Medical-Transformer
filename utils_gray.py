@@ -124,6 +124,7 @@ class ImageToImage2D(Dataset):
             evaluates to False, torchvision.transforms.ToTensor will be used on both image and mask.
         one_hot_mask: bool, if True, returns the mask in one-hot encoded form.
     """
+    mask_map = {0: 0, 51: 1, 102: 2, 153: 3, 204: 4, 255: 5}
 
     def __init__(self, dataset_path: str, joint_transform: Callable = None, one_hot_mask: int = False) -> None:
         self.dataset_path = dataset_path
@@ -156,9 +157,8 @@ class ImageToImage2D(Dataset):
         # correct dimensions if needed
         image, mask = correct_dims(image, mask)
         # print(image.shape)
-        mask[mask<127] = 0
-        mask[mask>=127] = 1
-
+        for i in self.mask_map:
+            mask[mask == i] = self.mask_map[i]
 
         if self.joint_transform:
             image, mask = self.joint_transform(image, mask)

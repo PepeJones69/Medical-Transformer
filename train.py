@@ -20,7 +20,7 @@ from torchvision.utils import save_image
 import torch
 import torch.nn.init as init
 from utils import JointTransform2D, ImageToImage2D, Image2D
-from metrics import jaccard_index, f1_score, LogNLLLoss,classwise_f1
+from metrics import jaccard_index, f1_score, LogNLLLoss, classwise_f1
 from utils import chk_mkdir, Logger, MetricList
 import cv2
 from functools import partial
@@ -93,11 +93,11 @@ valloader = DataLoader(val_dataset, 1, shuffle=True)
 device = torch.device("cuda")
 
 if modelname == "axialunet":
-    model = lib.models.axialunet(img_size = imgsize, imgchan = imgchant)
+    model = lib.models.axialunet(img_size = imgsize, imgchan = imgchant, num_classes=6)
 elif modelname == "MedT":
-    model = lib.models.axialnet.MedT(img_size = imgsize, imgchan = imgchant)
+    model = lib.models.axialnet.MedT(img_size = imgsize, imgchan = imgchant, num_classes=6)
 elif modelname == "gatedaxialunet":
-    model = lib.models.axialnet.gated(img_size = imgsize, imgchan = imgchant)
+    model = lib.models.axialnet.gated(img_size = imgsize, imgchan = imgchant, num_classes=6)
 elif modelname == "logo":
     model = lib.models.axialnet.logo(img_size = imgsize, imgchan = imgchant)
 
@@ -128,10 +128,8 @@ for epoch in range(args.epochs):
     epoch_running_loss = 0
     
     for batch_idx, (X_batch, y_batch, *rest) in enumerate(dataloader):        
-        
-        
 
-        X_batch = Variable(X_batch.to(device ='cuda'))
+        X_batch = Variable(X_batch.to(device='cuda'))
         y_batch = Variable(y_batch.to(device='cuda'))
         
         # ===================forward=====================
@@ -151,8 +149,6 @@ for epoch in range(args.epochs):
         yHaT = tmp
         yval = tmp2
 
-        
-
         loss = criterion(output, y_batch)
         
         # ===================backward====================
@@ -165,18 +161,17 @@ for epoch in range(args.epochs):
     print('epoch [{}/{}], loss:{:.4f}'
           .format(epoch, args.epochs, epoch_running_loss/(batch_idx+1)))
 
-    
     if epoch == 10:
         for param in model.parameters():
-            param.requires_grad =True
-    if (epoch % args.save_freq) ==0:
+            param.requires_grad = True
+    if (epoch % args.save_freq) == 0:
 
         for batch_idx, (X_batch, y_batch, *rest) in enumerate(valloader):
             # print(batch_idx)
             if isinstance(rest[0][0], str):
-                        image_filename = rest[0][0]
+                image_filename = rest[0][0]
             else:
-                        image_filename = '%s.png' % str(batch_idx + 1).zfill(3)
+                image_filename = '%s.png' % str(batch_idx + 1).zfill(3)
 
             X_batch = Variable(X_batch.to(device='cuda'))
             y_batch = Variable(y_batch.to(device='cuda'))
@@ -186,10 +181,11 @@ for epoch in range(args.epochs):
             # print('Time: ', stop - start) 
             tmp2 = y_batch.detach().cpu().numpy()
             tmp = y_out.detach().cpu().numpy()
-            tmp[tmp>=0.5] = 1
-            tmp[tmp<0.5] = 0
-            tmp2[tmp2>0] = 1
-            tmp2[tmp2<=0] = 0
+            tmp = np.argmax(tmp, 1)
+            #tmp[tmp>=0.5] = 1
+            #tmp[tmp<0.5] = 0
+            #tmp2[tmp2>0] = 1
+            #tmp2[tmp2<=0] = 0
             tmp2 = tmp2.astype(int)
             tmp = tmp.astype(int)
 
@@ -199,18 +195,20 @@ for epoch in range(args.epochs):
 
             epsilon = 1e-20
             
-            del X_batch, y_batch,tmp,tmp2, y_out
+            del X_batch, y_batch, tmp, tmp2, y_out
 
-            
-            yHaT[yHaT==1] =255
-            yval[yval==1] =255
+            #yHaT[yHaT==1] =255
+            #yval[yval==1] =255
             fulldir = direc+"/{}/".format(epoch)
             # print(fulldir+image_filename)
             if not os.path.isdir(fulldir):
                 
                 os.makedirs(fulldir)
-            
-            cv2.imwrite(fulldir+image_filename, yHaT[0,1,:,:])
+
+            plt.imshow(yHaT[0])
+            plt.savefig(fulldir+image_filename)
+            plt.close()
+            #cv2.imwrite(fulldir+image_filename, yHaT[0])
             # cv2.imwrite(fulldir+'/gt_{}.png'.format(count), yval[0,:,:])
         fulldir = direc+"/{}/".format(epoch)
         torch.save(model.state_dict(), fulldir+args.modelname+".pth")
