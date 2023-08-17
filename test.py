@@ -1,3 +1,4 @@
+from torchmetrics.classification import MulticlassJaccardIndex
 import argparse
 import lib
 import torch
@@ -59,7 +60,7 @@ args = parser.parse_args()
 
 direc = args.direc
 gray_ = args.gray
-aug = args.aug
+# aug = args.aug
 direc = args.direc
 modelname = args.modelname
 imgsize = args.imgsize
@@ -77,34 +78,48 @@ if args.crop is not None:
 else:
     crop = None
 
+
+def mIoU(pred, target, jaccard):
+    """
+    Args:
+        pred: Tensor, shape [batch_size, seq_len, embedding_dim]
+        target: Tensor, shape [batch_size, seq_len, embedding_dim]
+    """
+    pred = pred.reshape(-1)
+    target = target.reshape(-1)
+    return jaccard(pred, target)
+
+
 tf_train = JointTransform2D(crop=crop, p_flip=0.5, color_jitter_params=None, long_mask=True)
 tf_val = JointTransform2D(crop=crop, p_flip=0, color_jitter_params=None, long_mask=True)
-train_dataset = ImageToImage2D(args.train_dataset, tf_val)
+# train_dataset = ImageToImage2D(args.train_dataset, tf_val)
 val_dataset = ImageToImage2D(args.val_dataset, tf_val)
 predict_dataset = Image2D(args.val_dataset)
-dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
+# dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
 valloader = DataLoader(val_dataset, 1, shuffle=True)
 
 device = torch.device("cuda")
 
 if modelname == "axialunet":
-    model = lib.models.axialunet(img_size = imgsize, imgchan = imgchant)
+    model = lib.models.axialunet(img_size = imgsize, imgchan = imgchant, num_classes=6)
 elif modelname == "MedT":
-    model = lib.models.axialnet.MedT(img_size = imgsize, imgchan = imgchant)
+    model = lib.models.axialnet.MedT(img_size = imgsize, imgchan = imgchant, num_classes=6)
 elif modelname == "gatedaxialunet":
-    model = lib.models.axialnet.gated(img_size = imgsize, imgchan = imgchant)
+    model = lib.models.axialnet.gated(img_size = imgsize, imgchan = imgchant, num_classes=6)
 elif modelname == "logo":
     model = lib.models.axialnet.logo(img_size = imgsize, imgchan = imgchant)
 
 if torch.cuda.device_count() > 1:
   print("Let's use", torch.cuda.device_count(), "GPUs!")
   # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
-  model = nn.DataParallel(model,device_ids=[0,1]).cuda()
+  model = nn.DataParallel(model, device_ids=[0, 1]).cuda()
 model.to(device)
 
 model.load_state_dict(torch.load(loaddirec))
 model.eval()
 
+jaccard = MulticlassJaccardIndex(num_classes=6).to(device)
+miou = 0
 
 for batch_idx, (X_batch, y_batch, *rest) in enumerate(valloader):
     # print(batch_idx)
@@ -117,13 +132,16 @@ for batch_idx, (X_batch, y_batch, *rest) in enumerate(valloader):
     y_batch = Variable(y_batch.to(device='cuda'))
 
     y_out = model(X_batch)
+    y_out = torch.argmax(y_out, 1)
+
+    miou += mIoU(y_batch, y_out, jaccard)
 
     tmp2 = y_batch.detach().cpu().numpy()
     tmp = y_out.detach().cpu().numpy()
-    tmp[tmp>=0.5] = 1
-    tmp[tmp<0.5] = 0
-    tmp2[tmp2>0] = 1
-    tmp2[tmp2<=0] = 0
+    # tmp[tmp>=0.5] = 1
+    # tmp[tmp<0.5] = 0
+    # tmp2[tmp2>0] = 1
+    # tmp2[tmp2<=0] = 0
     tmp2 = tmp2.astype(int)
     tmp = tmp.astype(int)
 
@@ -133,17 +151,25 @@ for batch_idx, (X_batch, y_batch, *rest) in enumerate(valloader):
 
     epsilon = 1e-20
     
-    del X_batch, y_batch,tmp,tmp2, y_out
+    del X_batch, y_batch, tmp, tmp2, y_out
 
-    yHaT[yHaT==1] =255
-    yval[yval==1] =255
+    # yHaT[yHaT==1] =255
+    # yval[yval==1] =255
     fulldir = direc+"/"
     
     if not os.path.isdir(fulldir):
         
         os.makedirs(fulldir)
+
+    plt.imshow(yHaT[0])
+    plt.savefig(fulldir + image_filename)
+    plt.close()
+
+miou /= batch_idx + 1
+
+print(f"mIoU: {miou}")
    
-    cv2.imwrite(fulldir+image_filename, yHaT[0,1,:,:])
+    # cv2.imwrite(fulldir+image_filename, yHaT[0,1,:,:])
 
 
 
