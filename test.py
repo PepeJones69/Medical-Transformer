@@ -169,7 +169,7 @@ miou /= batch_idx + 1
 
 print(f"mIoU: {miou}")
    
-    # cv2.imwrite(fulldir+image_filename, yHaT[0,1,:,:])
+# cv2.imwrite(fulldir+image_filename, yHaT[0,1,:,:])
 
 
 

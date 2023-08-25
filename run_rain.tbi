@@ -78,7 +78,7 @@ nice_user = False
 # requirements = (GPURAM > 4000) && (GPURAM < 20000) && TARGET.Machine=="abacus.lfb.rwth-aachen.de"
 # Hint: Use (GPURAM > 5800) to match all GTX 1660 Super and GTX 1060
 # Example: (Use Workstation Pool, videocards with more then 5.8 GB but less then 16 GB VRAM and exclude all RTX 3090)
-requirements =  (GPURAM > 40000)
+requirements =  (GPURAM > 20000)
 
 
 
@@ -86,7 +86,7 @@ requirements =  (GPURAM > 40000)
 request_cpus = 1
 
 # required number of GPUs
-request_gpus = 1
+request_gpus = 2
 
 # required CPU RAM
 request_memory = 32 GB
