@@ -510,7 +510,7 @@ class medt_net(nn.Module):
 
     def __init__(self, block, block_2, layers, num_classes=2, zero_init_residual=True,
                  groups=8, width_per_group=64, replace_stride_with_dilation=None,
-                 norm_layer=None, s=0.125, img_size = 128,imgchan = 3):
+                 norm_layer=None, s=0.125, img_size=128, imgchan=3):
         super(medt_net, self).__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
@@ -658,12 +658,15 @@ class medt_net(nn.Module):
         x_loc = x.clone()
         # x = F.relu(F.interpolate(self.decoder5(x) , scale_factor=(2,2), mode ='bilinear'))
         #start 
-        for i in range(0,4):
-            for j in range(0,4):
+        for i in range(0, 4):
+            for j in range(0, 4):
 
-                x_p = xin[:,:,32*i:32*(i+1),32*j:32*(j+1)]
+                x_p = xin[:, :, 32*i:32*(i+1), 32*j:32*(j+1)]
                 # begin patch wise
-                x_p = self.conv1_p(x_p)
+                try:
+                    x_p = self.conv1_p(x_p)
+                except:
+                    pass
                 x_p = self.bn1_p(x_p)
                 # x = F.max_pool2d(x,2,2)
                 x_p = self.relu(x_p)
@@ -687,19 +690,19 @@ class medt_net(nn.Module):
                 # # print(x3.shape)
                 x4_p = self.layer4_p(x3_p)
                 
-                x_p = F.relu(F.interpolate(self.decoder1_p(x4_p), scale_factor=(2,2), mode ='bilinear'))
+                x_p = F.relu(F.interpolate(self.decoder1_p(x4_p), scale_factor=(2, 2), mode='bilinear'))
                 x_p = torch.add(x_p, x4_p)
-                x_p = F.relu(F.interpolate(self.decoder2_p(x_p) , scale_factor=(2,2), mode ='bilinear'))
+                x_p = F.relu(F.interpolate(self.decoder2_p(x_p), scale_factor=(2, 2), mode='bilinear'))
                 x_p = torch.add(x_p, x3_p)
-                x_p = F.relu(F.interpolate(self.decoder3_p(x_p) , scale_factor=(2,2), mode ='bilinear'))
+                x_p = F.relu(F.interpolate(self.decoder3_p(x_p), scale_factor=(2, 2), mode='bilinear'))
                 x_p = torch.add(x_p, x2_p)
-                x_p = F.relu(F.interpolate(self.decoder4_p(x_p) , scale_factor=(2,2), mode ='bilinear'))
+                x_p = F.relu(F.interpolate(self.decoder4_p(x_p), scale_factor=(2, 2), mode='bilinear'))
                 x_p = torch.add(x_p, x1_p)
-                x_p = F.relu(F.interpolate(self.decoder5_p(x_p) , scale_factor=(2,2), mode ='bilinear'))
+                x_p = F.relu(F.interpolate(self.decoder5_p(x_p), scale_factor=(2, 2), mode='bilinear'))
                 
-                x_loc[:,:,32*i:32*(i+1),32*j:32*(j+1)] = x_p
+                x_loc[:, :, 32*i:32*(i+1), 32*j:32*(j+1)] = x_p
 
-        x = torch.add(x,x_loc)
+        x = torch.add(x, x_loc)
         x = F.relu(self.decoderf(x))
         
         x = self.adjust(F.relu(x))
@@ -712,19 +715,19 @@ class medt_net(nn.Module):
 
 
 def axialunet(pretrained=False, **kwargs):
-    model = ResAxialAttentionUNet(AxialBlock, [1, 2, 4, 1], s= 0.125, **kwargs)
+    model = ResAxialAttentionUNet(AxialBlock, [1, 2, 4, 1], s=0.125, **kwargs)
     return model
 
 def gated(pretrained=False, **kwargs):
-    model = ResAxialAttentionUNet(AxialBlock_dynamic, [1, 2, 4, 1], s= 0.125, **kwargs)
+    model = ResAxialAttentionUNet(AxialBlock_dynamic, [1, 2, 4, 1], s=0.125, **kwargs)
     return model
 
 def MedT(pretrained=False, **kwargs):
-    model = medt_net(AxialBlock_dynamic,AxialBlock_wopos, [1, 2, 4, 1], s= 0.125,  **kwargs)
+    model = medt_net(AxialBlock_dynamic, AxialBlock_wopos, [1, 2, 4, 1], s=0.125, **kwargs)
     return model
 
 def logo(pretrained=False, **kwargs):
-    model = medt_net(AxialBlock,AxialBlock, [1, 2, 4, 1], s= 0.125, **kwargs)
+    model = medt_net(AxialBlock, AxialBlock, [1, 2, 4, 1], s=0.125, **kwargs)
     return model
 
 # EOF

@@ -109,13 +109,15 @@ elif modelname == "gatedaxialunet":
 elif modelname == "logo":
     model = lib.models.axialnet.logo(img_size = imgsize, imgchan = imgchant)
 
+print(torch.cuda.device_count())
 if torch.cuda.device_count() > 1:
   print("Let's use", torch.cuda.device_count(), "GPUs!")
   # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
   model = nn.DataParallel(model, device_ids=[0, 1]).cuda()
+
 model.to(device)
 
-model.load_state_dict(torch.load(loaddirec))
+model.load_state_dict(torch.load(loaddirec, "cuda"))
 model.eval()
 
 jaccard = MulticlassJaccardIndex(num_classes=6).to(device)
