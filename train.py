@@ -212,7 +212,7 @@ for epoch in range(args.epochs):
             # cv2.imwrite(fulldir+'/gt_{}.png'.format(count), yval[0,:,:])
         fulldir = direc+"/{}/".format(epoch)
         torch.save(model.state_dict(), fulldir+args.modelname+".pth")
-        torch.save(model.state_dict(), direc+"final_model.pth")
+        torch.save(model.state_dict(), os.path.join(direc, "final_model.pth"))
             
 
 

@@ -663,10 +663,8 @@ class medt_net(nn.Module):
 
                 x_p = xin[:, :, 32*i:32*(i+1), 32*j:32*(j+1)]
                 # begin patch wise
-                try:
-                    x_p = self.conv1_p(x_p)
-                except:
-                    pass
+                x_p = self.conv1_p(x_p)
+
                 x_p = self.bn1_p(x_p)
                 # x = F.max_pool2d(x,2,2)
                 x_p = self.relu(x_p)
