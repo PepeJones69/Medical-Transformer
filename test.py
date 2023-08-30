@@ -116,6 +116,7 @@ if torch.cuda.device_count() > 1:
 
 model.to(device)
 
+print(torch.cuda.device_count())
 model.load_state_dict(torch.load(loaddirec, "cuda"))
 model.eval()
 
