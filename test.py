@@ -25,7 +25,8 @@ import cv2
 from functools import partial
 from random import randint
 
-
+print(torch.cuda.is_available())
+print(torch.cuda.device_count())
 parser = argparse.ArgumentParser(description='MedT')
 parser.add_argument('-j', '--workers', default=16, type=int, metavar='N',
                     help='number of data loading workers (default: 8)')
