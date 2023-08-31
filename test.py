@@ -25,8 +25,6 @@ import cv2
 from functools import partial
 from random import randint
 
-print(torch.cuda.is_available())
-print(torch.cuda.device_count())
 parser = argparse.ArgumentParser(description='MedT')
 parser.add_argument('-j', '--workers', default=16, type=int, metavar='N',
                     help='number of data loading workers (default: 8)')
@@ -116,8 +114,8 @@ if torch.cuda.device_count() > 1:
   model = nn.DataParallel(model, device_ids=[0, 1]).cuda()
 
 
-print(torch.cuda.device_count())
-model.load_state_dict(torch.load(loaddirec, "cuda"))
+_model = torch.load(loaddirec, "cuda:0")
+model.load_state_dict(_model)
 model.to(device)
 model.eval()
 
