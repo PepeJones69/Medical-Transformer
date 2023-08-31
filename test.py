@@ -1,4 +1,4 @@
-from torchmetrics.classification import MulticlassJaccardIndex
+from torchmetrics.classification import MulticlassJaccardIndex, BinaryJaccardIndex
 import argparse
 import lib
 import torch
@@ -120,7 +120,9 @@ model.to(device)
 model.eval()
 
 jaccard = MulticlassJaccardIndex(num_classes=6).to(device)
+jaccard_i = BinaryJaccardIndex().to(device)
 miou = 0
+iou = [0 for i in range(6)]
 
 for batch_idx, (X_batch, y_batch, *rest) in enumerate(valloader):
     # print(batch_idx)
@@ -136,6 +138,10 @@ for batch_idx, (X_batch, y_batch, *rest) in enumerate(valloader):
     y_out = torch.argmax(y_out, 1)
 
     miou += mIoU(y_batch, y_out, jaccard)
+    for i in range(6):
+        y_out_i = (y_out == i).to(int)
+        y_batch_i = (y_batch == i).to(int)
+        iou[i] += mIoU(y_batch_i, y_out_i, jaccard_i).item()
 
     tmp2 = y_batch.detach().cpu().numpy()
     tmp = y_out.detach().cpu().numpy()
@@ -167,8 +173,12 @@ for batch_idx, (X_batch, y_batch, *rest) in enumerate(valloader):
     plt.close()
 
 miou /= batch_idx + 1
+for i in range(6):
+    iou[i] /= batch_idx + 1
 
 print(f"mIoU: {miou}")
+for i in range(6):
+    print(f"IoU {i}: {iou[i]}")
    
 # cv2.imwrite(fulldir+image_filename, yHaT[0,1,:,:])
 
