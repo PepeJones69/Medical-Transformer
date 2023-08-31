@@ -114,9 +114,9 @@ if torch.cuda.device_count() > 1:
   # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
   model = nn.DataParallel(model, device_ids=[0, 1]).cuda()
 
-model.to(device)
 
 model.load_state_dict(torch.load(loaddirec, "cuda"))
+model.to(device)
 model.eval()
 
 jaccard = MulticlassJaccardIndex(num_classes=6).to(device)
