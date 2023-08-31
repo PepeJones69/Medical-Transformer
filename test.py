@@ -115,6 +115,7 @@ if torch.cuda.device_count() > 1:
   model = nn.DataParallel(model, device_ids=[0, 1]).cuda()
 
 
+print(torch.cuda.device_count())
 model.load_state_dict(torch.load(loaddirec, "cuda"))
 model.to(device)
 model.eval()
