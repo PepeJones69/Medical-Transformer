@@ -19,7 +19,7 @@ from torchvision.utils import save_image
 import torch
 import torch.nn.init as init
 from utils import JointTransform2D, ImageToImage2D, Image2D
-from metrics import jaccard_index, f1_score, LogNLLLoss,classwise_f1
+from metrics import jaccard_index, f1_score, LogNLLLoss, classwise_f1
 from utils import chk_mkdir, Logger, MetricList
 import cv2
 from functools import partial
@@ -55,6 +55,8 @@ parser.add_argument('--device', default='cuda', type=str)
 parser.add_argument('--loaddirec', default='load', type=str)
 parser.add_argument('--imgsize', type=int, default=None)
 parser.add_argument('--gray', default='no', type=str)
+parser.add_argument('--n_classes', default=6, type=int)
+
 args = parser.parse_args()
 
 direc = args.direc
@@ -100,18 +102,18 @@ valloader = DataLoader(val_dataset, 1, shuffle=True)
 device = torch.device("cuda")
 
 if modelname == "axialunet":
-    model = lib.models.axialunet(img_size = imgsize, imgchan = imgchant, num_classes=6)
+    model = lib.models.axialunet(img_size=imgsize, imgchan=imgchant, num_classes=args.n_classes)
 elif modelname == "MedT":
-    model = lib.models.axialnet.MedT(img_size = imgsize, imgchan = imgchant, num_classes=6)
+    model = lib.models.axialnet.MedT(img_size=imgsize, imgchan=imgchant, num_classes=args.n_classes)
 elif modelname == "gatedaxialunet":
-    model = lib.models.axialnet.gated(img_size = imgsize, imgchan = imgchant, num_classes=6)
+    model = lib.models.axialnet.gated(img_size=imgsize, imgchan=imgchant, num_classes=args.n_classes)
 elif modelname == "logo":
-    model = lib.models.axialnet.logo(img_size = imgsize, imgchan = imgchant)
+    model = lib.models.axialnet.logo(img_size=imgsize, imgchan=imgchant)
 
 if torch.cuda.device_count() > 1:
-  print("Let's use", torch.cuda.device_count(), "GPUs!")
-  # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
-  model = nn.DataParallel(model, device_ids=[0, 1]).cuda()
+    print("Let's use", torch.cuda.device_count(), "GPUs!")
+    # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
+    model = nn.DataParallel(model, device_ids=[0, 1]).cuda()
 
 
 _model = torch.load(loaddirec, "cpu")
@@ -119,10 +121,10 @@ model.load_state_dict(_model)
 model.to(device)
 model.eval()
 
-jaccard = MulticlassJaccardIndex(num_classes=6).to(device)
+jaccard = MulticlassJaccardIndex(num_classes=args.n_classes).to(device)
 jaccard_i = BinaryJaccardIndex().to(device)
 miou = 0
-iou = [0 for i in range(6)]
+iou = [0 for i in range(args.n_classes)]
 
 for batch_idx, (X_batch, y_batch, *rest) in enumerate(valloader):
     # print(batch_idx)
@@ -138,7 +140,7 @@ for batch_idx, (X_batch, y_batch, *rest) in enumerate(valloader):
     y_out = torch.argmax(y_out, 1)
 
     miou += mIoU(y_batch, y_out, jaccard)
-    for i in range(6):
+    for i in range(args.n_classes):
         y_out_i = (y_out == i).to(int)
         y_batch_i = (y_batch == i).to(int)
         iou[i] += mIoU(y_batch_i, y_out_i, jaccard_i).item()
@@ -173,11 +175,11 @@ for batch_idx, (X_batch, y_batch, *rest) in enumerate(valloader):
     plt.close()
 
 miou /= batch_idx + 1
-for i in range(6):
+for i in range(args.n_classes):
     iou[i] /= batch_idx + 1
 
 print(f"mIoU: {miou}")
-for i in range(6):
+for i in range(args.n_classes):
     print(f"IoU {i}: {iou[i]}")
    
 # cv2.imwrite(fulldir+image_filename, yHaT[0,1,:,:])

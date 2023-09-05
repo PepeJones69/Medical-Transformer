@@ -64,6 +64,7 @@ parser.add_argument('--device', default='cuda', type=str)
 parser.add_argument('--gray', default='no', type=str)
 parser.add_argument('--loss', default='LogNLL', type=str)
 parser.add_argument('--loss_weight', default=0.1, type=float)
+parser.add_argument('--n_classes', default=6, type=int)
 
 args = parser.parse_args()
 gray_ = args.gray
@@ -95,11 +96,11 @@ valloader = DataLoader(val_dataset, 1, shuffle=True)
 device = torch.device("cuda")
 
 if modelname == "axialunet":
-    model = lib.models.axialunet(img_size=imgsize, imgchan=imgchant, num_classes=6)
+    model = lib.models.axialunet(img_size=imgsize, imgchan=imgchant, num_classes=args.n_classes)
 elif modelname == "MedT":
-    model = lib.models.axialnet.MedT(img_size=imgsize, imgchan=imgchant, num_classes=6)
+    model = lib.models.axialnet.MedT(img_size=imgsize, imgchan=imgchant, num_classes=args.n_classes)
 elif modelname == "gatedaxialunet":
-    model = lib.models.axialnet.gated(img_size=imgsize, imgchan=imgchant, num_classes=6)
+    model = lib.models.axialnet.gated(img_size=imgsize, imgchan=imgchant, num_classes=args.n_classes)
 elif modelname == "logo":
     model = lib.models.axialnet.logo(img_size=imgsize, imgchan=imgchant)
 
@@ -139,7 +140,6 @@ for epoch in range(args.epochs):
         y_batch = Variable(y_batch.to(device='cuda'))
         
         # ===================forward=====================
-        
 
         output = model(X_batch)
 
@@ -217,7 +217,7 @@ for epoch in range(args.epochs):
             #cv2.imwrite(fulldir+image_filename, yHaT[0])
             # cv2.imwrite(fulldir+'/gt_{}.png'.format(count), yval[0,:,:])
         fulldir = direc+"/{}/".format(epoch)
-        torch.save(model.state_dict(), fulldir+args.modelname+".pth")
+        #torch.save(model.state_dict(), fulldir+args.modelname+".pth")
         torch.save(model.state_dict(), os.path.join(direc, "final_model.pth"))
             
 
