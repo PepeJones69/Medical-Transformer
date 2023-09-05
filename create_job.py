@@ -28,7 +28,6 @@ with open(f"./runs/{template_name}/run_test.sh") as test_sh_template:
     test_sh_template = test_sh_template.replace(template_name, name)
 
 os.makedirs(f"./runs/{name}", exist_ok=True)
-os.makedirs(f"./runs/{name}/tensorboard", exist_ok=True)
 
 with open(f"./runs/{name}/run_train.tbi", "w") as train_tbi:
     train_tbi.write(train_tbi_template)
