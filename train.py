@@ -20,7 +20,7 @@ from torchvision.utils import save_image
 import torch
 import torch.nn.init as init
 from utils import JointTransform2D, ImageToImage2D, Image2D
-from metrics import jaccard_index, f1_score, LogNLLLoss, classwise_f1
+from metrics import jaccard_index, f1_score, LogNLLLoss, LogNLL_Topology_Loss, classwise_f1
 from utils import chk_mkdir, Logger, MetricList
 import cv2
 from functools import partial
@@ -62,6 +62,8 @@ parser.add_argument('--crop', type=int, default=None)
 parser.add_argument('--imgsize', type=int, default=None)
 parser.add_argument('--device', default='cuda', type=str)
 parser.add_argument('--gray', default='no', type=str)
+parser.add_argument('--loss', default='LogNLL', type=str)
+parser.add_argument('--loss_weight', default=0.1, type=float)
 
 args = parser.parse_args()
 gray_ = args.gray
@@ -93,21 +95,25 @@ valloader = DataLoader(val_dataset, 1, shuffle=True)
 device = torch.device("cuda")
 
 if modelname == "axialunet":
-    model = lib.models.axialunet(img_size = imgsize, imgchan = imgchant, num_classes=6)
+    model = lib.models.axialunet(img_size=imgsize, imgchan=imgchant, num_classes=6)
 elif modelname == "MedT":
-    model = lib.models.axialnet.MedT(img_size = imgsize, imgchan = imgchant, num_classes=6)
+    model = lib.models.axialnet.MedT(img_size=imgsize, imgchan=imgchant, num_classes=6)
 elif modelname == "gatedaxialunet":
-    model = lib.models.axialnet.gated(img_size = imgsize, imgchan = imgchant, num_classes=6)
+    model = lib.models.axialnet.gated(img_size=imgsize, imgchan=imgchant, num_classes=6)
 elif modelname == "logo":
-    model = lib.models.axialnet.logo(img_size = imgsize, imgchan = imgchant)
+    model = lib.models.axialnet.logo(img_size=imgsize, imgchan=imgchant)
 
 if torch.cuda.device_count() > 1:
-  print("Let's use", torch.cuda.device_count(), "GPUs!")
-  # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
-  model = nn.DataParallel(model,device_ids=[0,1]).cuda()
+    print("Let's use", torch.cuda.device_count(), "GPUs!")
+    # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
+    model = nn.DataParallel(model, device_ids=[0, 1]).cuda()
 model.to(device)
 
-criterion = LogNLLLoss()
+if args.loss == "LogNLL":
+    criterion = LogNLLLoss()
+elif args.loss == "LogNLL_Topology":
+    criterion = LogNLL_Topology_Loss(weight=args.loss_weight)
+
 optimizer = torch.optim.Adam(list(model.parameters()), lr=args.learning_rate,
                              weight_decay=1e-5)
 
@@ -139,10 +145,10 @@ for epoch in range(args.epochs):
 
         tmp2 = y_batch.detach().cpu().numpy()
         tmp = output.detach().cpu().numpy()
-        tmp[tmp>=0.5] = 1
-        tmp[tmp<0.5] = 0
-        tmp2[tmp2>0] = 1
-        tmp2[tmp2<=0] = 0
+        tmp[tmp >= 0.5] = 1
+        tmp[tmp < 0.5] = 0
+        tmp2[tmp2 > 0] = 1
+        tmp2[tmp2 <= 0] = 0
         tmp2 = tmp2.astype(int)
         tmp = tmp.astype(int)
 

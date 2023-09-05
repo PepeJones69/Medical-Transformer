@@ -1,6 +1,7 @@
 import torch
 from torch.nn.functional import cross_entropy
 from torch.nn.modules.loss import _WeightedLoss
+from torch import nn
 
 
 EPSILON = 1e-32
@@ -18,6 +19,32 @@ class LogNLLLoss(_WeightedLoss):
         # y_input = torch.log(y_input + EPSILON)
         return cross_entropy(y_input, y_target, weight=self.weight,
                              ignore_index=self.ignore_index)
+
+
+class TopologyLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.relu = nn.ReLU()
+
+    def forward(self, x: torch.Tensor):
+        """
+        Args:
+            x: Tensor, shape [batch_size, h, w]
+            x is a labelmap output
+        """
+        return torch.mean(self.relu(x[:, :, :-1] - x[:, :, 1:]).to(float))
+
+
+class LogNLL_Topology_Loss(nn.Module):
+    def __init__(self, weight):
+        super().__init__()
+        self.topology_loss = TopologyLoss()
+        self.lognll_loss = LogNLLLoss()
+        self.loss_weight = weight
+
+    def forward(self, y_input: torch.Tensor, y_target: torch.Tensor):
+        y_labelmap = torch.argmax(y_input, 1)
+        return self.lognll_loss(y_input, y_target) + self.loss_weight * self.topology_loss(y_labelmap)
 
 
 def classwise_iou(output, gt):
