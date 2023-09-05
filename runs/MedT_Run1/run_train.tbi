@@ -20,7 +20,7 @@
 ######################################################################
 
 # Shell script that you want to execute
-cmd = /work/scratch/schulz/Medical-Transformer/run_train.sh
+cmd = /work/scratch/schulz/Medical-Transformer/runs/MedT_Run1/run_train.sh
 
 # command line arguments
 # args =
@@ -29,9 +29,9 @@ cmd = /work/scratch/schulz/Medical-Transformer/run_train.sh
 # initialdir = /work/scratch/schulz/ContrastiveSeg
 
 # define output, error and log file
-output = /work/scratch/schulz/logs/Medical.$(Process)_out.log
-error = /work/scratch/schulz/logs/Medical.$(Process)_err.log
-log = /work/scratch/schulz/logs/Medical.$(Process)_log.log
+output = /work/scratch/schulz/logs/MedT_Run1.$(Process)_out.log
+error = /work/scratch/schulz/logs/MedT_Run1.$(Process)_err.log
+log = /work/scratch/schulz/logs/MedT_Run1.$(Process)_log.log
 
 # working environments
 getenv        = True
