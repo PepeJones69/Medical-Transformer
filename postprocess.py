@@ -3,29 +3,29 @@ import pickle
 import numpy as np
 import skimage.io
 from skimage import morphology
-from tqdm import tqdm
 
 FILE_PATH = '/images/innoretvision/eye/goals/pred/RUN_C5_SST256_deeplabv3p_BS2_Ep100_LR1e'
 ROI_PATH = '/images/innoretvision/eye/goals/roi/' 
 SAVE_PATH = '/images/innoretvision/eye/goals/results_examples'+'/Layer_Segmentations/'
 os.makedirs(SAVE_PATH, exist_ok=True)
 
+
 def destretch(label_filename, roi_filename):
-    with open (roi_filename, 'rb') as fp:
+    with open(roi_filename, 'rb') as fp:
         roi_start_list_smooth = pickle.load(fp)
     label = skimage.io.imread(label_filename)
-    label = skimage.transform.resize(label, (256,1100), order=0, preserve_range=True)
+    label = skimage.transform.resize(label, (256, 1100), order=0, preserve_range=True)
     label = label.astype(np.uint8)
 
-    label_fin = np.ones((800,1100)) * 255
+    label_fin = np.ones((800, 1100)) * 255
     label_fin = label_fin.astype(np.uint8)
     for i, roi_start in enumerate(roi_start_list_smooth):
-        label_fin[roi_start:roi_start+256, i] = label[:,i]
+        label_fin[roi_start:roi_start+256, i] = label[:, i]
 
     return label_fin
     
 
-for img_filename in tqdm(sorted(os.listdir(FILE_PATH))):
+for img_filename in sorted(os.listdir(FILE_PATH)):
     if img_filename.endswith('.png'):
         label_filename = os.path.join(FILE_PATH, img_filename)
         roi_filename = ROI_PATH + img_filename[:-4]
