@@ -4,9 +4,9 @@ import numpy as np
 import skimage.io
 from skimage import morphology
 
-FILE_PATH = '/images/innoretvision/eye/goals/pred/RUN_C5_SST256_deeplabv3p_BS2_Ep100_LR1e'
-ROI_PATH = '/images/innoretvision/eye/goals/roi/' 
-SAVE_PATH = '/images/innoretvision/eye/goals/results_examples'+'/Layer_Segmentations/'
+FILE_PATH = 'runs/test/0/'
+ROI_PATH = 'data_test/roi/'
+SAVE_PATH = 'runs/test/destretched'
 os.makedirs(SAVE_PATH, exist_ok=True)
 
 
@@ -38,10 +38,10 @@ for img_filename in sorted(os.listdir(FILE_PATH)):
             for noise in roi_labels[:-4]:
                 mask = (label_mor == noise)
                 dilated = morphology.binary_dilation(mask)
-                neighbors_temp, neighbor_counts = np.unique(label[np.logical_xor(mask,dilated)], return_counts=True)
+                neighbors_temp, neighbor_counts = np.unique(label[np.logical_xor(mask, dilated)], return_counts=True)
                 best_neighbor = neighbors_temp[np.argmax(neighbor_counts)]
                 label[mask] = best_neighbor
                 skimage.io.imsave(SAVE_PATH+img_filename, label)
         else:
             skimage.io.imsave(SAVE_PATH+img_filename, label)
-print("De-stretched to "+ SAVE_PATH)
+print("De-stretched to " + SAVE_PATH)
