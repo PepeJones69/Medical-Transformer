@@ -36,10 +36,10 @@ class TopologyLoss(nn.Module):
 
 
 class LogNLL_Topology_Loss(nn.Module):
-    def __init__(self, weight):
+    def __init__(self, weight, ignore_index=-100):
         super().__init__()
         self.topology_loss = TopologyLoss()
-        self.lognll_loss = LogNLLLoss()
+        self.lognll_loss = LogNLLLoss(ignore_index=ignore_index)
         self.loss_weight = weight
 
     def forward(self, y_input: torch.Tensor, y_target: torch.Tensor):

@@ -110,10 +110,11 @@ if torch.cuda.device_count() > 1:
     model = nn.DataParallel(model, device_ids=[0, 1]).cuda()
 model.to(device)
 
+ignore_index = 0 if args.n_classes == 4 else -100
 if args.loss == "LogNLL":
-    criterion = LogNLLLoss()
+    criterion = LogNLLLoss(ignore_index=ignore_index)
 elif args.loss == "LogNLL_Topology":
-    criterion = LogNLL_Topology_Loss(weight=args.loss_weight)
+    criterion = LogNLL_Topology_Loss(weight=args.loss_weight, ignore_index=ignore_index)
 
 optimizer = torch.optim.Adam(list(model.parameters()), lr=args.learning_rate,
                              weight_decay=1e-5)
