@@ -4,8 +4,8 @@ import numpy as np
 from scipy.ndimage import uniform_filter
 
 image_dir = "data_new/0000"
-target_dir = "data_new_mov_avg/img"
-method = "mov_avg"
+target_dir = "data_new_bilateral/img"
+method = "bilateral"
 dim = 256, 256
 
 if not os.path.exists(target_dir):

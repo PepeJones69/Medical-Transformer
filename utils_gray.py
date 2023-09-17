@@ -152,7 +152,7 @@ class ImageToImage2D(Dataset):
         image = cv2.imread(os.path.join(self.input_path, image_filename),0)
         # print(image.shape)
         # read mask image
-        mask = cv2.imread(os.path.join(self.output_path, image_filename[: -3] + "png"),0)
+        mask = cv2.imread(os.path.join(self.output_path, image_filename[: -3] + "png"), 0)
         
         # correct dimensions if needed
         image, mask = correct_dims(image, mask)
