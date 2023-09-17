@@ -3,9 +3,9 @@ import os
 import numpy as np
 from scipy.ndimage import uniform_filter
 
-image_dir = "data_new/0000"
-target_dir = "data_new_bilateral/img"
-method = "bilateral"
+image_dir = "data_new_original"
+target_dir = "data_new/img"
+method = None
 dim = 256, 256
 
 if not os.path.exists(target_dir):
@@ -36,4 +36,10 @@ elif method == "bilateral":
         img_denoised = cv2.bilateralFilter(img, 9, 40, 100)
         img_denoised = cv2.resize(img_denoised, dim)
         cv2.imwrite(os.path.join(target_dir, fname), img_denoised)
+
+else:
+    for i, fname in enumerate(fnames):
+        img = cv2.imread(os.path.join(image_dir, fname))
+        img = cv2.resize(img, dim)
+        cv2.imwrite(os.path.join(target_dir, fname), img)
 
