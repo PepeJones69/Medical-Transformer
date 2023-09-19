@@ -3,15 +3,15 @@ import os
 import numpy as np
 from scipy.ndimage import uniform_filter
 
-image_dir = "data_new_original"
-target_dir = "data_new/img"
-method = None
+image_dir = "data_original/val/img"
+target_dir = "data_original/val/img"
+method = "crop"
 dim = 256, 256
 
 if not os.path.exists(target_dir):
     os.makedirs(target_dir)
 
-fnames = sorted(os.listdir(image_dir), key=lambda name: int(name.split("_")[0]))
+fnames = os.listdir(image_dir)
 
 if method == "mov_avg":
     first_img = cv2.imread(os.path.join(image_dir, fnames[0]))
@@ -36,6 +36,12 @@ elif method == "bilateral":
         img_denoised = cv2.bilateralFilter(img, 9, 40, 100)
         img_denoised = cv2.resize(img_denoised, dim)
         cv2.imwrite(os.path.join(target_dir, fname), img_denoised)
+
+elif method == "crop":
+    for i, fname in enumerate(fnames):
+        img = cv2.imread(os.path.join(image_dir, fname))
+        img_cropped = img[:, 150:950, :]
+        cv2.imwrite(os.path.join(target_dir, fname), img_cropped)
 
 else:
     for i, fname in enumerate(fnames):
