@@ -3,9 +3,9 @@ import os
 import numpy as np
 from scipy.ndimage import uniform_filter
 
-image_dir = "data_original/val/img"
-target_dir = "data_original/val/img"
-method = "crop"
+image_dir = "data_original/train/img"
+target_dir = "data_original/train/img"
+method = "resize"
 dim = 256, 256
 
 if not os.path.exists(target_dir):
@@ -42,6 +42,12 @@ elif method == "crop":
         img = cv2.imread(os.path.join(image_dir, fname))
         img_cropped = img[:, 150:950, :]
         cv2.imwrite(os.path.join(target_dir, fname), img_cropped)
+
+elif method == "resize":
+    for i, fname in enumerate(fnames):
+        img = cv2.imread(os.path.join(image_dir, fname))
+        img_resized = cv2.resize(img, (256, 256))
+        cv2.imwrite(os.path.join(target_dir, fname), img_resized)
 
 else:
     for i, fname in enumerate(fnames):
